@@ -1,122 +1,87 @@
-#include <Arduino.h>
 
 #include <stdint.h>
 #include <vector>
 #include <functional>
 #include <memory>
 
+#include "quadui.hpp"
+
 // physical io
-class PhysicalButton;
+namespace QuadUI {
 
-// ui processing
-class Screen;
-class Tile;
-class Button;
+  Input::Input() :
+    press_duration_(0),
+    state_(STATE_RELEASED)
+  {}
 
-// ui visual
-class TileVisual;
-class ButtonVisual;
+  Input::Input(uint32_t press_duration, uint8_t state) :
+    press_duration_(press_duration),
+    state_(state)
+  {}
 
-class PhysicalButton{
-  public:
-    PhysicalButton(uint8_t pin, bool invert);
-    void update();
-    bool is_pressed() {return is_pressed_;};
-  
-  private:
-    bool is_pressed_;
-    uint8_t pin_;
-    bool invert_;
-    uint16_t press_duration_;
-    bool previous_state_;
-};
-
-PhysicalButton::PhysicalButton(uint8_t pin, bool invert=true) : 
-  is_pressed_(false),
-  pin_(pin),
-  invert_(invert),
-  press_duration_(0),
-  previous_state_(false)
-{
-  pinMode(pin_, INPUT);
-}
-
-void PhysicalButton::update() {
-  // update state
-  previous_state_ = is_pressed_;
-  is_pressed_ = digitalRead(pin_);
-  if(invert_) {
-    is_pressed_ = !is_pressed_;
+  PhysicalButton::PhysicalButton(uint8_t pin, bool pullup=false) :
+    Input(),
+    pin_(pin),
+    pullup_(pullup)
+  {
+    if (pullup) {
+      pinMode(pin_, INPUT_PULLUP);
+    } else {
+      pinMode(pin_, INPUT);
+    }
   }
 
-  // update duration
-  if(is_pressed_) {
-    press_duration_++;
-  } else {
-    press_duration_ = 0;
-  }
-}
+  void PhysicalButton::update() {
+    bool pressed = digitalRead(pin_) == LOW;
+    pressed = pullup_ ? !pressed : pressed;
 
+    if (pressed) {
+      // reset duration when triggered
+      if (!(state_ & MASK_PRESS)) {
+        state_ = STATE_PRESSED_TRIGER;
+        last_pressed_time_ = millis();
+      } else {
+        state_ = STATE_PRESSED;
+      }
+      
+      press_duration_ = millis() - last_pressed_time_;
 
-class Screen {
-  public:
-    Screen();
-    void process();
-
-  private:
-    std::shared_ptr<Tile> current_tile_;
-
-};
-
-void Screen::process() {
+    } else {
+      if (state_ & MASK_PRESS) {
+        state_ = STATE_RELEASED_TRIGER;
+      } else {
+        state_ = STATE_RELEASED;
+      }
+    }
     
-}
+  }
 
-class Tile{
-  public:
-    Tile(const std::shared_ptr<Screen>& screen);
-    uint8_t get_focus_id() {return button_focus_id_;};
+  Tile::Tile() :
+    controls_()
+  {}
 
-  private:
-    std::shared_ptr<Screen> screen_;
-    std::vector<std::shared_ptr<Button>> buttons_;
-    uint8_t button_focus_id_;
+  Tile::Tile(const std::vector<std::shared_ptr<Control>>& controls) :
+    controls_(controls)
+  {}
 
-};
+  void Tile::update(const Input& input) {
+    
+  }
 
-class Button {
-  public:
-    Button(const std::shared_ptr<Tile>& tile, uint8_t focus_id, ButtonVisual visual);
+  TileManager::TileManager(std::shared_ptr<Tile> tile, PhysicalButton button) :
+    tile_(tile),
+    button_(button)
+  {}
 
-  private:
-    std::shared_ptr<Tile> tile;
-    uint8_t focus_id_;
-    uint8_t press_duration_;
-    ButtonVisual visual_;
+  void TileManager::update() {
+    button_.update();
+    Input input = button_.get_input();
+    tile_->update(input);
+  }
 
-    bool is_focused();
-};
 
-bool Button::is_focused() {
-  if(tile->get_focus_id() == focus_id_) return true;
-  return false;
-}
-
-class ButtonVisual {
-  public:
-    ButtonVisual(const std::shared_ptr<Button>& button, uint8_t px, uint8_t py, uint8_t sx, uint8_t sy);
-    void redraw();
-
-  private:
-    std::shared_ptr<Button> button_;
-    void draw_focused_button();
-    void draw_button();
-};
-
-void ButtonVisual::redraw() {
-  // redraw button
-  // if focused, draw outer border
-
-  // draw contents
+  void TileManager::draw(LovyanGFX& gfx) {
+    tile_->draw(gfx);
+  }
 
 }
