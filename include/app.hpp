@@ -9,6 +9,24 @@
 #include <Adafruit_NeoPixel.h>
 
 namespace QuadUI{
+
+  struct AppConfig {
+    uint8_t led_fixed_color_brightness=255;
+    uint8_t led_fixed_color_contrast=50;
+    uint8_t led_fixed_color_hue=120;
+  };
+
+  class StaticLightController {
+    public:
+      StaticLightController(Adafruit_NeoPixel* pixels, AppConfig* config);
+      void update();
+    protected:
+      Adafruit_NeoPixel* pixels_;
+      uint32_t last_update_time_;
+      uint32_t update_interval_;
+      AppConfig* config_;
+  };
+
   class App : public TileManager{
     public:
       App();
@@ -36,12 +54,6 @@ namespace QuadUI{
       Adafruit_NeoPixel* pixels_;
   };
 
-  struct AppConfig {
-    uint8_t led_fixed_color_brightness;
-    uint8_t led_fixed_color_contrast;
-    uint8_t led_fixed_color_hue;
-  };
-
   class AppTile : public Tile {
     public:
       explicit AppTile(App* parent_ptr);
@@ -51,17 +63,6 @@ namespace QuadUI{
     protected:
       App* parent_ptr_;
       bool render_queued_;
-  };
-
-  class StaticLightController {
-    public:
-      StaticLightController(Adafruit_NeoPixel* pixels, AppConfig* config);
-      void update();
-    protected:
-      Adafruit_NeoPixel* pixels_;
-      uint32_t last_update_time_;
-      uint32_t update_interval_;
-      AppConfig* config_;
   };
 
   class HomeStaticLightTile : public AppTile {
