@@ -4,6 +4,12 @@
 #include <vector>
 #include <functional>
 #include <memory>
+#include <string>
+
+#ifndef QUADUI_HPP
+#define QUADUI_HPP
+
+#include <LGFX_AUTODETECT.hpp>
 
 // physical io
 namespace QuadUI {
@@ -17,35 +23,41 @@ namespace QuadUI {
 
   class Input {
     public:
-      const uint8_t STATE_RELEASED = 0b00;
-      const uint8_t STATE_PRESSED_TRIGER = 0b01;
-      const uint8_t STATE_PRESSED = 0b11;
-      const uint8_t STATE_RELEASED_TRIGER = 0b10;
-      const uint8_t MASK_PRESS = 0b01;
-      const uint8_t MASK_TRIGGER = 0b10;
+      static const uint8_t STATE_RELEASED = 0b00;
+      static const uint8_t STATE_PRESSED_TRIGER = 0b01;
+      static const uint8_t STATE_PRESSED = 0b11;
+      static const uint8_t STATE_RELEASED_TRIGER = 0b10;
+      static const uint8_t MASK_PRESS = 0b01;
+      static const uint8_t MASK_TRIGGER = 0b10;
 
     public:
       Input();
       explicit Input(uint32_t press_duration);
       Input(uint32_t press_duration, uint8_t state);
 
-      bool is_pressed() {
+      bool is_pressed() const {
         return state_ & MASK_PRESS;
       }
-      bool is_released() {
+      bool is_released() const {
         return !(state_ & MASK_PRESS);
       }
-      bool is_pressed_trigger() {
+      bool is_pressed_trigger() const {
         return state_ == STATE_PRESSED_TRIGER;
       }
-      bool is_released_trigger() {
+      bool is_released_trigger() const {
         return state_ == STATE_RELEASED_TRIGER;
       }
-      bool is_long_pressed(uint32_t duration) {
+      bool is_long_pressed(uint32_t duration) const {
         return press_duration_ > duration && is_pressed();
       }
-      bool is_long_released_trigger(uint32_t duration) {
+      bool is_long_released_trigger(uint32_t duration) const {
         return press_duration_ > duration && is_released_trigger();
+      }
+      bool is_short_pressed(uint32_t duration) const {
+        return press_duration_ <= duration && is_pressed();
+      }
+      bool is_short_released_trigger(uint32_t duration) const {
+        return press_duration_ <= duration && is_released_trigger();
       }
 
     public:
@@ -71,7 +83,10 @@ namespace QuadUI {
     public:
       Control();
       virtual void update(const Input& input) = 0;
-      virtual void draw(LovyanGFX& gfx) = 0;
+      virtual void draw(LGFX_Device* gfx) = 0;
+      virtual void set_focus(bool is_focused) {
+        is_focused_ = is_focused;
+      }
 
     protected:
       bool is_focused_;
@@ -80,24 +95,28 @@ namespace QuadUI {
   class Tile {
     public:
       Tile();
-      explicit Tile(const std::vector<std::shared_ptr<Control>>& controls);
+      Tile(const std::vector<std::shared_ptr<Control>>& controls, uint32_t duration_threshold);
       virtual void update(const Input& input);
-      virtual void draw(LovyanGFX& gfx);
+      virtual void draw(LGFX_Device* gfx);
 
     protected:
       std::vector<std::shared_ptr<Control>> controls_;
       uint8_t focus_index_;
+      uint32_t duration_threshold_;
       
   };
 
   class TileManager {
     public:
       TileManager(std::shared_ptr<Tile> tile, PhysicalButton button);
-      void update();
-      void draw(LovyanGFX& gfx);
+      virtual void update();
+      virtual void draw(LGFX_Device* gfx);
 
     protected:
+      std::shared_ptr<TileManager> parent_;
       std::shared_ptr<Tile> tile_;
       PhysicalButton button_;
   };
 }
+
+#endif // QUADUI_HPP

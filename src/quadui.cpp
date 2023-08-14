@@ -6,6 +6,7 @@
 
 #include "quadui.hpp"
 
+
 // physical io
 namespace QuadUI {
 
@@ -56,16 +57,56 @@ namespace QuadUI {
     
   }
 
+  Control::Control() :
+    is_focused_(false)
+  {}
+
   Tile::Tile() :
+    duration_threshold_(300),
+    focus_index_(0),
     controls_()
   {}
 
-  Tile::Tile(const std::vector<std::shared_ptr<Control>>& controls) :
-    controls_(controls)
+  Tile::Tile(const std::vector<std::shared_ptr<Control>>& controls, uint32_t duration_threshold=(uint32_t)300) :
+    controls_(controls),
+    duration_threshold_(duration_threshold)
   {}
 
   void Tile::update(const Input& input) {
-    
+    Input input_for_focus(input);
+
+    // check tile has at least one control
+    if (controls_.size() == 0) {
+      // debug
+      Serial.println("Tile::update: no control");
+      return;
+    }
+
+    if(input.is_short_pressed(duration_threshold_)) {
+      input_for_focus.state_ = Input::STATE_RELEASED;
+    }
+
+    if(input.is_short_released_trigger(duration_threshold_)) {
+      controls_[focus_index_]->set_focus(false);
+      focus_index_ = (focus_index_ + 1) % controls_.size();
+      controls_[focus_index_]->set_focus(true);
+      input_for_focus.state_ = Input::STATE_RELEASED;
+    }
+
+    // update other controls
+    for (uint8_t i = 0; i < controls_.size(); i++) {
+      if (i != focus_index_) {
+        controls_[i]->update(Input());
+      } else {
+        controls_[i]->update(input_for_focus);
+      }
+    }
+  }
+
+  void Tile::draw(LGFX_Device* gfx) {
+    for (uint8_t i = 0; i < controls_.size(); i++) {
+      controls_[i]->draw(gfx);
+    }
   }
 
   TileManager::TileManager(std::shared_ptr<Tile> tile, PhysicalButton button) :
@@ -80,7 +121,7 @@ namespace QuadUI {
   }
 
 
-  void TileManager::draw(LovyanGFX& gfx) {
+  void TileManager::draw(LGFX_Device* gfx) {
     tile_->draw(gfx);
   }
 

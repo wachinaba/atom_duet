@@ -1,3 +1,5 @@
+#include <Arduino.h>
+
 #define LGFX_AUTODETECT
 #define LGFX_USE_V1   
 
@@ -15,6 +17,12 @@ static LGFX lcd;
 #include <hardware/BLEMIDI_ESP32.h>
 
 #include "quadui.hpp"
+#include "quadui_variants.hpp"
+#include "app.hpp"
+
+
+
+#if 1
 
 BLEMIDI_CREATE_INSTANCE("atom_duet", MIDI)
 
@@ -22,21 +30,37 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 QuadUI::PhysicalButton button1(41, false);
 
+QuadUI::App app;
+
 void setup() {
+
+  Serial.begin(9600);
+  
+  // hw init
+  pixels.begin();
+  pixels.clear();
+  pixels.setPixelColor(0, pixels.Color(255, 0, 0));
+  pixels.show();
   lcd.init();
   lcd.setColorDepth(16);
-  lcd.fillScreen(lcd.color888(255,255,255));
+  lcd.setRotation(1);
+  app.init(&lcd, &pixels);
+  MIDI.begin();
+  Serial.println("setup done");
+  delay(1000);
+
 }
 
 int count = 0;
 
 void loop() {
-  button1.update();
-  if(button1.is_pressed_trigger()) lcd.fillScreen(lcd.color888(255,255,255));
-  lcd.drawNumber(button1.press_duration_, 10, 10);
-  if(button1.is_long_released_trigger(1000)){
-    lcd.drawString("long pressed!", 10, 10);
-    delay(1000);
-    lcd.fillScreen(lcd.color888(255,255,255));
-  }
+  Serial.println("loop");
+  app.update();
+  app.draw(&lcd);
+  delay(10);
 }
+
+#else
+void setup() {};
+void loop() {};
+#endif
