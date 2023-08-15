@@ -37,6 +37,7 @@ namespace QuadUI{
 
       // factories
       void set_home_static_light_tile();
+      void set_home_static_light_color_config_tile();
 
       LGFX_Device* get_lcd() {
         return lcd_;
@@ -46,7 +47,6 @@ namespace QuadUI{
       }
 
       AppConfig config_;
-      StaticLightController static_light_controller_;
 
       protected:
       // io
@@ -70,6 +70,9 @@ namespace QuadUI{
       explicit HomeStaticLightTile(App* parent_ptr);
       virtual void update(const Input& input);
       virtual void custom_draw(LGFX_Device* gfx);
+
+    protected:
+      StaticLightController light_controller_;
   };
   
   class HomeStaticLightColorConfigTile : public AppTile {
@@ -89,8 +92,9 @@ namespace QuadUI{
       }
       virtual void update(const Input& input);
       virtual void custom_draw(LGFX_Device* gfx);
+    protected:
+      StaticLightController light_controller_;
   };
-  
 }
 
 

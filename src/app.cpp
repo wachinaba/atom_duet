@@ -9,16 +9,13 @@ namespace QuadUI{
   App::App() :
     lcd_(nullptr),
     pixels_(nullptr),
-    TileManager(nullptr, PhysicalButton(41, false)),
-    static_light_controller_(nullptr, &config_)
+    TileManager(nullptr, PhysicalButton(41, false))
   {
   }
 
   void App::init(LGFX_Device* lcd, Adafruit_NeoPixel* pixels) {
     lcd_ = lcd;
     pixels_ = pixels;
-    // controller init
-    static_light_controller_ = StaticLightController(pixels_, &config_);
     // tile init
     set_home_static_light_tile();
   }
@@ -32,6 +29,10 @@ namespace QuadUI{
 
   void App::set_home_static_light_tile() {
     tile_ = std::make_shared<HomeStaticLightTile>(this);
+  }
+
+  void App::set_home_static_light_color_config_tile() {
+    tile_ = std::make_shared<HomeStaticLightColorConfigTile>(this);
   }
 
   AppTile::AppTile(App* parent_ptr) :
@@ -63,7 +64,7 @@ namespace QuadUI{
     // update all pixels to the same color
     if(millis() - last_update_time_ < update_interval_) return;
 
-    uint32_t color = pixels_->ColorHSV(config_->led_fixed_color_hue, config_->led_fixed_color_contrast, config_->led_fixed_color_brightness);
+    uint32_t color = pixels_->ColorHSV(config_->led_fixed_color_hue * 256, config_->led_fixed_color_contrast, config_->led_fixed_color_brightness);
     for(uint16_t i = 0; i < pixels_->numPixels(); i++) {
       pixels_->setPixelColor(i, color);
     }
@@ -72,22 +73,21 @@ namespace QuadUI{
   }
 
   HomeStaticLightTile::HomeStaticLightTile(App* parent_ptr) :
-    AppTile(parent_ptr)
+    AppTile(parent_ptr),
+    light_controller_(parent_ptr->get_pixels(), &parent_ptr->config_)
   {
     // add controls
     // right button
     controls_.push_back(std::make_shared<SingleActionButton>(112, 32, 16, 64, []{}, ">"));
-    // bottom button
-    controls_.push_back(std::make_shared<SingleActionButton>(32, 112, 64, 16, []{}, "Config"));
+    // bottom button (config)
+    controls_.push_back(std::make_shared<SingleActionButton>(32, 112, 64, 16, [this]{this->parent_ptr_->set_home_static_light_color_config_tile();}, "Config"));
     // left button
     controls_.push_back(std::make_shared<SingleActionButton>(0, 32, 16, 64, []{}, "<"));
   }
 
   void HomeStaticLightTile::update(const Input& input) {
-
     AppTile::update(input);
-    parent_ptr_->static_light_controller_.update();
-
+    light_controller_.update();
   }
 
   void HomeStaticLightTile::custom_draw(LGFX_Device* gfx) {
@@ -100,7 +100,8 @@ namespace QuadUI{
   }
 
   HomeStaticLightColorConfigTile::HomeStaticLightColorConfigTile(App* parent_ptr) :
-    AppTile(parent_ptr)
+    AppTile(parent_ptr),
+    light_controller_(parent_ptr->get_pixels(), &parent_ptr->config_)
   {
     // add controls
     // home button
@@ -121,6 +122,26 @@ namespace QuadUI{
 
   void HomeStaticLightColorConfigTile::update(const Input& input) {
     AppTile::update(input);
+    light_controller_.update();
+  }
+
+  void HomeStaticLightColorConfigTile::custom_draw(LGFX_Device* gfx) {
+    // draw background
+    gfx->fillRect(0, 0, 128, 128, UI_COLOR_BG);
+    // draw text
+    gfx->setTextColor(UI_COLOR_FG, UI_COLOR_BG);
+    // draw color
+    uint32_t color = parent_ptr_->get_pixels()->ColorHSV(parent_ptr_->config_.led_fixed_color_hue, parent_ptr_->config_.led_fixed_color_contrast, parent_ptr_->config_.led_fixed_color_brightness);
+    gfx->fillRect(32, 32, 64, 64, color);
+    // draw hue
+    gfx->drawString("Hue", 64, 48);
+    gfx->drawString(String(parent_ptr_->config_.led_fixed_color_hue), 64, 56);
+    // draw contrast
+    gfx->drawString("Contrast", 64, 72);
+    gfx->drawString(String(parent_ptr_->config_.led_fixed_color_contrast), 64, 80);
+    // draw brightness
+    gfx->drawString("Brightness", 64, 96);
+    gfx->drawString(String(parent_ptr_->config_.led_fixed_color_brightness), 64, 104);
   }
 
 
