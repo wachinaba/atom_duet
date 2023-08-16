@@ -13,8 +13,7 @@ static LGFX lcd;
 #define PIN 38
 #define NUMPIXELS 29
 
-#include <BLEMIDI_Transport.h>
-#include <hardware/BLEMIDI_ESP32.h>
+#include "midi_wrapper.hpp"
 
 #include "quadui.hpp"
 #include "quadui_variants.hpp"
@@ -25,6 +24,7 @@ static LGFX lcd;
 #if 1
 
 BLEMIDI_CREATE_INSTANCE("atom_duet", midi_interface);
+MidiWrapper midi_wrapper(&midi_interface);
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -44,7 +44,7 @@ void setup() {
   lcd.init();
   lcd.setColorDepth(16);
   lcd.setRotation(1);
-  app.init(&lcd, &pixels, &midi_interface);
+  app.init(&lcd, &pixels);
   midi_interface.begin();
   Serial.println("setup done");
   delay(1000);

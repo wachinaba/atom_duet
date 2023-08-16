@@ -1,7 +1,7 @@
-#include "quadui.hpp"
-
 #ifndef QUADUI_VARIANTS_HPP
 #define QUADUI_VARIANTS_HPP
+
+#include "quadui.hpp"
 
 #include <LGFX_AUTODETECT.hpp>
 

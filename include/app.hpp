@@ -1,21 +1,15 @@
-#include "quadui.hpp"
-#include "quadui_variants.hpp"
-
 #ifndef QUADUIAPP_HPP
 #define QUADUIAPP_HPP
+
+#include "midi_wrapper.hpp"
+#include "quadui.hpp"
+#include "quadui_variants.hpp"
 
 #include <LGFX_AUTODETECT.hpp>
 
 #include <Adafruit_NeoPixel.h>
 
-#include <BLEMIDI_Transport.h>
-#include <hardware/BLEMIDI_ESP32.h>
 
-#include "midi_wrapper.hpp"
-
-#ifndef MIDI
-#define MIDI MIDI_NAMESPACE::MidiInterface<BLEMIDI_NAMESPACE::BLEMIDI_Transport<BLEMIDI_NAMESPACE::BLEMIDI_ESP32>, BLEMIDI_NAMESPACE::MySettings>
-#endif
 
 namespace QuadUI{
 
@@ -52,7 +46,7 @@ namespace QuadUI{
 
   class MidiKeyTrackLightController {
     public:
-      MidiKeyTrackLightController(Adafruit_NeoPixel* pixels, MIDI* midi_interface, AppConfig* config);
+      MidiKeyTrackLightController(Adafruit_NeoPixel* pixels, AppConfig* config);
       ~MidiKeyTrackLightController();
 
       void handle_note_on(midi::Channel channel, byte pitch, byte velocity);
@@ -61,9 +55,6 @@ namespace QuadUI{
       void update();
     protected:
       Adafruit_NeoPixel* pixels_;
-      MIDI* midi_interface_;
-      uint32_t last_update_time_;
-      uint32_t update_interval_;
       AppConfig* config_;
   };
 
@@ -73,21 +64,19 @@ namespace QuadUI{
       virtual void update();
       virtual void draw(LGFX_Device* gfx);
 
-      void init(LGFX_Device* lcd, Adafruit_NeoPixel* pixels, MIDI* midi_interface);
+      void init(LGFX_Device* lcd, Adafruit_NeoPixel* pixels);
 
       // factories
       void set_static_light_home_tile();
       void set_static_light_color_config_tile();
       void set_waving_light_home_tile();
+      void set_midi_keytrack_home_tile();
 
       LGFX_Device* get_lcd() {
         return lcd_;
       }
       Adafruit_NeoPixel* get_pixels() {
         return pixels_;
-      }
-      MIDI* get_midi_interface() {
-        return midi_interface_;
       }
 
       AppConfig config_;
@@ -96,7 +85,6 @@ namespace QuadUI{
       // io
       LGFX_Device* lcd_;
       Adafruit_NeoPixel* pixels_;
-      MidiWrapper* midi_wrapper_;
   };
 
   class AppTile : public Tile {

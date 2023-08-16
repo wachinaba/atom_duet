@@ -1,3 +1,6 @@
+#ifndef QUADUI_HPP
+#define QUADUI_HPP
+
 #include <LovyanGFX.hpp>
 
 #include <stdint.h>
@@ -5,9 +8,6 @@
 #include <functional>
 #include <memory>
 #include <string>
-
-#ifndef QUADUI_HPP
-#define QUADUI_HPP
 
 #include <LGFX_AUTODETECT.hpp>
 
