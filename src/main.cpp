@@ -24,7 +24,7 @@ static LGFX lcd;
 
 #if 1
 
-BLEMIDI_CREATE_INSTANCE("atom_duet", MIDI)
+BLEMIDI_CREATE_INSTANCE("atom_duet", midi_interface);
 
 Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
@@ -44,8 +44,8 @@ void setup() {
   lcd.init();
   lcd.setColorDepth(16);
   lcd.setRotation(1);
-  app.init(&lcd, &pixels);
-  MIDI.begin();
+  app.init(&lcd, &pixels, &midi_interface);
+  midi_interface.begin();
   Serial.println("setup done");
   delay(1000);
 
@@ -54,10 +54,9 @@ void setup() {
 int count = 0;
 
 void loop() {
-  Serial.println("loop");
+  midi_interface.read();
   app.update();
   app.draw(&lcd);
-  delay(10);
 }
 
 #else

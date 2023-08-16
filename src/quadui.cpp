@@ -72,6 +72,13 @@ namespace QuadUI {
     duration_threshold_(duration_threshold)
   {}
 
+  Tile::~Tile() {
+    // reset all controls
+    for (uint8_t i = 0; i < controls_.size(); i++) {
+      controls_[i].reset(); // release shared_ptr
+    }
+  }
+
   void Tile::update(const Input& input) {
     Input input_for_focus(input);
 

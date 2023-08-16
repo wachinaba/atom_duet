@@ -87,17 +87,27 @@ namespace QuadUI {
       virtual void set_focus(bool is_focused) {
         is_focused_ = is_focused;
       }
+      virtual void queue_render() {
+        is_render_queued_ = true;
+      }
 
     protected:
       bool is_focused_;
+      bool is_render_queued_;
   };
 
   class Tile {
     public:
       Tile();
       Tile(const std::vector<std::shared_ptr<Control>>& controls, uint32_t duration_threshold);
+      virtual ~Tile();
       virtual void update(const Input& input);
       virtual void draw(LGFX_Device* gfx);
+      virtual void queue_render_all() {
+        for (auto& control : controls_) {
+          control->queue_render();
+        }
+      }
 
     protected:
       std::vector<std::shared_ptr<Control>> controls_;

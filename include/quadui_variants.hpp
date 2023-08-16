@@ -14,7 +14,7 @@ namespace QuadUI {
   static const uint32_t UI_COLOR_CONTROL_FG = LGFX::color888(255, 255, 255);
   static const uint32_t UI_COLOR_CONTROL_BG_FOCUS = LGFX::color888(0, 0, 200);
   static const uint32_t UI_COLOR_CONTROL_BG_ENTER = LGFX::color888(255, 165, 0);
-
+  
   // todo: Add interface "Actionable", which has a callback function
   
   class SingleActionButton : public Control {
@@ -37,7 +37,6 @@ namespace QuadUI {
       uint16_t height_;
       std::function<void()> callback_;
       std::string text_;
-      bool is_render_queued_;
       Input input_;
       uint32_t prev_press_duration_;
   };

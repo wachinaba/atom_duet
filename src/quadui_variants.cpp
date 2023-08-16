@@ -10,8 +10,7 @@ namespace QuadUI {
         pos_y_(pos_y),
         width_(width),
         height_(height),
-        text_(text),
-        is_render_queued_(true)
+        text_(text)
   {};
 
   void SingleActionButton::draw(LGFX_Device* gfx) {
